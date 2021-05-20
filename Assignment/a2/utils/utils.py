@@ -4,7 +4,6 @@ import numpy as np
 
 def normalizeRows(x):
     """ Row normalization function
-
     Implement a function that normalizes each row of a matrix to have
     unit length.
     """
@@ -25,12 +24,13 @@ def softmax(x):
     orig_shape = x.shape
 
     if len(x.shape) > 1:
-        # Matrix
-        tmp = np.max(x, axis=1)
-        x -= tmp.reshape((x.shape[0], 1))
+        #matrix
+        N = x.shape[0]
+        tmp = np.max(x, axis=1).reshape((N, 1))
+        x -= tmp
         x = np.exp(x)
         tmp = np.sum(x, axis=1)
-        x /= tmp.reshape((x.shape[0], 1))
+        x /= tmp.reshape((N, 1))
     else:
         # Vector
         tmp = np.max(x)

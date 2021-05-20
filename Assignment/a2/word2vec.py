@@ -57,6 +57,7 @@ def naiveSoftmaxLossAndGradient(
     ### Please use the provided softmax function (imported earlier in this file)
     ### This numerically stable implementation helps you avoid issues pertaining
     ### to integer overflow. 
+    N,dim = outsideVectors.shape
     value = np.dot(outsideVectors, centerWordVec) # N x 1
     y_hat  = softmax(value)
     loss = - np.log(y_hat[outsideWordIdx])
@@ -64,7 +65,7 @@ def naiveSoftmaxLossAndGradient(
     d_value = y_hat
     d_value[outsideWordIdx] -= 1 # y_hat - y, matrix shape (N, 1)
     gradCenterVec   = outsideVectors.T.dot(d_value) # shape d x 1
-    gradOutsideVecs = d_value[:, np.newaxis].dot( np.array([centerWordVec]) ) # (N, 1) dot (1, d) -> (N, d)
+    gradOutsideVecs = d_value.reshape((N,1)).dot( centerWordVec.reshape((1,dim)))  # (N, 1) dot (1, d) -> (N, d)
 
     ### END YOUR CODE
 
@@ -110,23 +111,23 @@ def negSamplingLossAndGradient(
     indices = [outsideWordIdx] + negSampleWordIndices
 
     ### YOUR CODE HERE
+    N,dim = outsideVectors.shape
     o_vector = outsideVectors[outsideWordIdx]
-    neg_vector = outsideVectors[negSampleWordIndices]
+    neg_vectors = outsideVectors[negSampleWordIndices]
     ### Please use your implementation of sigmoid in here.
     value_outside  = o_vector.dot(centerWordVec)
-    value_negative = neg_vector.dot(centerWordVec)
+    value_negative = neg_vectors.dot(centerWordVec)
 
     p_outside  = sigmoid(value_outside)
     p_negative = sigmoid(- value_negative)
 
     loss = - (np.log(p_outside) + np.sum(np.log(p_negative)) )
-    gradCenterVec = (p_outside - 1) * o_vector + np.sum((1 - p_negative)[:, np.newaxis] * neg_vector, axis = 0)
-
+    gradCenterVec = (p_outside - 1) * o_vector + (1 - p_negative.T).dot(neg_vectors)
     gradOutsideVecs = np.zeros_like(outsideVectors)
     gradOutsideVecs[outsideWordIdx] = (p_outside - 1) * centerWordVec
     for i, neg_index in enumerate(negSampleWordIndices):
         gradOutsideVecs[neg_index] += (1 - p_negative[i]) * centerWordVec # remember negative can appear multiple times
-
+    
     ### END YOUR CODE
 
     return loss, gradCenterVec, gradOutsideVecs
